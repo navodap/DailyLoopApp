@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DailyLoop – Glass Productivity</title>
+
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(135deg, #f7c6d8, #f3dbe5);
+  min-height: 100vh;
+  color: #3a1f2d;
+  overflow: hidden;
+  display: flex;
+}
+
+/* ---------- SIDE MENU ---------- */
+
+.side-menu {
+  width: 80px;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.25);
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px; /* Increased top padding for gap below browser bar */
+  gap: 35px; /* Increased gap between menu items */
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.menu-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #3a1f2d;
+  font-size: 20px;
+  padding: 6px 0;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.menu-item.active {
+  background: rgba(255, 90, 158, 0.2);
+  border-color: #ff5a9e;
+  color: #ff5a9e;
+}
+
+.menu-item span {
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+  text-align: center;
+  width: 100%;
+  line-height: 1.2;
+}
+
+/* ---------- MAIN CONTENT AREA ---------- */
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  height: 100vh;
+}
+
+/* ---------- MONTH NAVIGATION HEADER ---------- */
+.month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px 5px 20px;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.month-nav button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.6);
+  color: #ff5a9e;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.month-nav button:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.1);
+}
+
+#currentMonthYear {
+  font-size: 18px;
+  font-weight: 600;
+  color: #3a1f2d;
+  min-width: 140px;
+  text-align: center;
+}
+
+/* ---------- GLASS PANELS ---------- */
+.panel {
+  background: rgba(255,255,255,0.45);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  padding: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+/* ---------- DATE CAROUSEL ---------- */
+.date-carousel {
+  display:flex;
+  gap:10px;
+  padding:12px 20px;
+  margin-bottom:10px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.date-carousel::-webkit-scrollbar { display:none; }
+
+.date-carousel button {
+  width:70px;
+  height:70px;
+  border-radius:14px;
+  border:none;
+  background: rgba(255,255,255,0.6);
+  color:#3a1f2d;
+  cursor:pointer;
+  transition:0.3s;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  font-size:12px;
+  line-height:1.1;
+  text-align:center;
+}
+
+.date-carousel button.active {
+  outline: 2px solid #ff5a9e;
+}
+
+.date-carousel button:hover {
+  background: rgba(255,255,255,0.85);
+}
+
+/* ---------- MAIN LAYOUT ---------- */
+.main-section {
+  display:flex;
+  flex:1;
+  padding:20px;
+  gap:20px;
+}
+
+/* ---------- MOTIVATION COLUMN ---------- */
+.motivation-column {
+  width:180px;
+  display:flex;
+}
+
+.quote-box {
+  min-height:180px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:12px;
+  font-style:italic;
+  font-size:14px;
+  text-align:center;
+}
+
+/* ---------- PROGRESS BAR ---------- */
+.progress-bg {
+  height:8px;
+  width:100%;
+  background: rgba(255,255,255,0.4);
+  border-radius:4px;
+  overflow:hidden;
+}
+
+#progressBar {
+  height:100%;
+  width:0%;
+  background:#ff5a9e;
+  transition: width 0.4s ease;
+}
+
+/* ---------- TASKS ---------- */
+.tasks-container {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.habit {
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap:12px;
+  padding:12px 16px;
+  border-radius:16px;
+  background: rgba(255,255,255,0.55);
+  border:1px solid rgba(255,255,255,0.6);
+  cursor:pointer;
+  transition: 0.25s;
+}
+
+.habit:hover {
+  background: rgba(255,255,255,0.85);
+}
+
+.habit label {
+  cursor:pointer;
+  flex:1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.habit-text {
+  flex: 1;
+}
+
+.streak-badge {
+  background: rgba(255, 90, 158, 0.15);
+  color: #ff5a9e;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 45px;
+  justify-content: center;
+}
+
+.streak-badge.high {
+  background: rgba(255, 90, 158, 0.25);
+}
+
+.streak-badge.medium {
+  background: rgba(255, 90, 158, 0.2);
+}
+
+.streak-badge.low {
+  background: rgba(255, 90, 158, 0.1);
+}
+
+input[type="checkbox"] {
+  width:20px;
+  height:20px;
+  accent-color:#ff5a9e;
+  flex-shrink: 0;
+}
+
+/* ---------- TODAY BUTTON ---------- */
+.today-btn {
+  background: rgba(255, 90, 158, 0.2);
+  border: 1px solid #ff5a9e;
+  color: #ff5a9e;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.today-btn:hover {
+  background: rgba(255, 90, 158, 0.3);
+}
+
+/* ---------- FLOATING BUTTONS ---------- */
+.bottom-buttons {
+  position:fixed;
+  bottom:30px;
+  right:30px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  z-index: 99;
+}
+
+.bottom-buttons button {
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:none;
+  font-size:26px;
+  background: rgba(255,255,255,0.8);
+  color:#ff5a9e;
+  cursor:pointer;
+  transition:0.3s;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.bottom-buttons button:hover {
+  transform:scale(1.12);
+  background: rgba(255,255,255,1);
+}
+
+/* ===== EDIT MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.edit-modal {
+  background: rgba(255,255,255,0.9);
+  border-radius: 20px;
+  padding: 25px;
+  width: 90%;
+  max-width: 500px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+
+.habit-list-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.habit-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.8);
+}
+
+.habit-edit-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  font-size: 16px;
+  color: #3a1f2d;
+}
+
+.habit-edit-input:focus {
+  outline: none;
+}
+
+.delete-habit {
+  background: rgba(255, 90, 158, 0.1);
+  border: 1px solid #ff5a9e;
+  color: #ff5a9e;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-habit:hover {
+  background: rgba(255, 90, 158, 0.2);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-btn.primary {
+  background: #ff5a9e;
+  color: white;
+}
+
+.modal-btn.secondary {
+  background: rgba(255,255,255,0.6);
+  color: #3a1f2d;
+}
+/* ===== DYNAMIC THEME VARIABLES ===== */
+:root {
+  --primary-gradient: linear-gradient(135deg, #f7c6d8, #f3dbe5);
+  --primary-color: #ff5a9e;
+  --text-color: #3a1f2d;
+  --bg-color: rgba(255, 255, 255, 0.45);
+  --bg-color-light: rgba(255, 255, 255, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.45);
+}
+
+body.theme-blue {
+  --primary-gradient: linear-gradient(135deg, #c6d8f7, #dbe5f3);
+  --primary-color: #4a90e2;
+  --text-color: #1f2d3a;
+}
+
+body.theme-green {
+  --primary-gradient: linear-gradient(135deg, #c6f7d8, #dbf3e5);
+  --primary-color: #28a745;
+  --text-color: #1f3a2d;
+}
+
+body.theme-dark {
+  --primary-gradient: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+  --primary-color: #ff5a9e;
+  --text-color: #ffffff;
+  --bg-color: rgba(255, 255, 255, 0.1);
+  --bg-color-light: rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(30, 30, 30, 0.6);
+}
+
+/* Update all existing styles to use CSS variables */
+body {
+  background: var(--primary-gradient);
+  color: var(--text-color);
+}
+
+.glass, .panel {
+  background: var(--glass-bg);
+}
+
+.month-nav button, .date-carousel button,
+.bottom-buttons button, .menu-item {
+  background: var(--bg-color-light);
+}
+
+.menu-item.active, .today-btn {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+#progressBar, .timer-btn.start, .modal-btn.primary {
+  background: var(--primary-color);
+}
+
+.streak-badge, .streak-badge.high, .streak-badge.medium, .streak-badge.low {
+  background: rgba(var(--primary-color-rgb), 0.15);
+  color: var(--primary-color);
+}
+
+/* Add this for primary color RGB */
+body.theme-pink {
+  --primary-color-rgb: 255, 90, 158;
+}
+
+body.theme-blue {
+  --primary-color-rgb: 74, 144, 226;
+}
+
+body.theme-green {
+  --primary-color-rgb: 40, 167, 69;
+}
+
+body.theme-dark {
+  --primary-color-rgb: 255, 90, 158;
+}
+
+</style>
+<!-- Add this in head section of ALL HTML files -->
+<script src="settings-manager.js"></script>
+</head>
+
+<body>
+
+<!-- SIDE MENU -->
+<div class="side-menu">
+  <div class="menu-item active" data-page="home">
+    🏠
+    <span>Home</span>
+  </div>
+  <div class="menu-item" data-page="stats">
+    📊
+    <span>Stats</span>
+  </div>
+  <div class="menu-item" data-page="calendar">
+    📅
+    <span>Calendar</span>
+  </div>
+  <div class="menu-item" data-page="focus">
+    🎯
+    <span>Focus</span>
+  </div>
+  <div class="menu-item" data-page="ai">
+    🤖
+    <span>AI Agent</span>
+  </div>
+  <div class="menu-item" data-page="settings">
+    ⚙️
+    <span>Settings</span>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <!-- MONTH NAVIGATION -->
+  <div class="month-header">
+    <div class="month-nav">
+      <button id="prevMonth">◀</button>
+      <span id="currentMonthYear">February 2026</span>
+      <button id="nextMonth">▶</button>
+    </div>
+    <button class="today-btn" id="todayBtn">Today</button>
+  </div>
+
+  <!-- DATE CAROUSEL -->
+  <div class="date-carousel panel" id="dateCarousel"></div>
+  
+  <!-- Edit Habits Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="edit-modal">
+      <h2>Edit Daily Habits</h2>
+      <p>These are your default habits for each day:</p>
+      
+      <div class="habit-list-edit" id="habitListEdit">
+        <!-- Habits will be added here by JavaScript -->
+      </div>
+      
+      <button id="addNewHabit" style="margin: 15px 0; padding: 10px; background: rgba(255,90,158,0.1); border: 1px dashed #ff5a9e; border-radius: 12px; color: #ff5a9e; cursor: pointer;">
+        + Add New Habit
+      </button>
+      
+      <div class="modal-buttons">
+        <button class="modal-btn secondary" id="cancelEdit">Cancel</button>
+        <button class="modal-btn primary" id="saveHabits">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN SECTION -->
+  <div class="main-section">
+    <div class="motivation-column">
+      <div class="quote-box panel">
+        <span id="quoteText"></span>
+        <div class="progress-bg">
+          <div id="progressBar"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tasks-container" id="tasksContainer"></div>
+  </div>
+</div>
+
+<!-- FLOATING BUTTONS -->
+<div class="bottom-buttons">
+  <button id="editHabits">✏️</button>
+  <button id="addTask">+</button>
+  <button id="aiPartner">🤖</button>
+</div>
+
+<script>
+  // Add to all pages
+
+/* ===== DEFAULT HABITS ===== */
+function getDefaultHabits() {
+  const saved = localStorage.getItem('defaultHabits');
+  const defaultHabitsList = ["Drink 3L Water","Study","Exercise","Sleep Early"];
+  return saved ? JSON.parse(saved) : defaultHabitsList;
+}
+
+/* ===== DATA ===== */
+let defaultHabits = getDefaultHabits();
+let specialTasks = {};
+
+/* ===== HABIT EDITOR ===== */
+const editHabitsBtn = document.getElementById('editHabits');
+const editModal = document.getElementById('editModal');
+const cancelEditBtn = document.getElementById('cancelEdit');
+const saveHabitsBtn = document.getElementById('saveHabits');
+const addNewHabitBtn = document.getElementById('addNewHabit');
+const habitListEdit = document.getElementById('habitListEdit');
+
+// Save default habits to localStorage
+function saveDefaultHabits(habits) {
+  localStorage.setItem('defaultHabits', JSON.stringify(habits));
+  defaultHabits = habits;
+}
+
+// Open edit modal
+editHabitsBtn.onclick = () => {
+  renderEditHabits();
+  editModal.classList.add('active');
+};
+
+// Close edit modal
+cancelEditBtn.onclick = () => {
+  editModal.classList.remove('active');
+};
+
+// Save habits
+saveHabitsBtn.onclick = () => {
+  const habitInputs = document.querySelectorAll('.habit-edit-input');
+  const newHabits = [];
+  
+  habitInputs.forEach(input => {
+    if (input.value.trim() !== '') {
+      newHabits.push(input.value.trim());
+    }
+  });
+  
+  if (newHabits.length > 0) {
+    saveDefaultHabits(newHabits);
+    renderTasks();
+    refreshMotivation();
+    editModal.classList.remove('active');
+  } else {
+    alert('Please add at least one habit!');
+  }
+};
+
+// Add new habit field
+addNewHabitBtn.onclick = () => {
+  const newItem = document.createElement('div');
+  newItem.className = 'habit-edit-item';
+  newItem.innerHTML = `
+    <input type="text" class="habit-edit-input" placeholder="New habit...">
+    <button class="delete-habit">×</button>
+  `;
+  habitListEdit.appendChild(newItem);
+  
+  // Focus the new input
+  newItem.querySelector('.habit-edit-input').focus();
+  
+  // Add delete handler
+  newItem.querySelector('.delete-habit').onclick = function() {
+    newItem.remove();
+  };
+};
+
+// Render habits in edit modal
+function renderEditHabits() {
+  habitListEdit.innerHTML = '';
+  const habits = getDefaultHabits();
+  
+  habits.forEach(habit => {
+    const item = document.createElement('div');
+    item.className = 'habit-edit-item';
+    item.innerHTML = `
+      <input type="text" class="habit-edit-input" value="${habit}">
+      <button class="delete-habit">×</button>
+    `;
+    habitListEdit.appendChild(item);
+    
+    // Add delete handler
+    item.querySelector('.delete-habit').onclick = function() {
+      item.remove();
+    };
+  });
+}
+
+// Close modal when clicking outside
+editModal.onclick = (e) => {
+  if (e.target === editModal) {
+    editModal.classList.remove('active');
+  }
+};
+
+/* ===== STREAK FUNCTION ===== */
+function getStreakCount(habitName) {
+  let streak = 0;
+  let checkDate = new Date(currentDate);
+  
+  // Check backwards from current date
+  while (true) {
+    const key = checkDate.toISOString().split("T")[0];
+    const done = JSON.parse(localStorage.getItem(key)) || [];
+    
+    if (done.includes(habitName)) {
+      streak++;
+      // Move to previous day
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break; // Streak broken
+    }
+  }
+  
+  return streak;
+}
+
+function getStreakBadgeClass(streak) {
+  if (streak >= 7) return "high";
+  if (streak >= 3) return "medium";
+  return "low";
+}
+
+/* ===== QUOTES ===== */
+const quotes = [
+  "Consistency is the key to success.",
+  "Small steps every day lead to big results.",
+  "Your habits define your future.",
+  "Progress, not perfection.",
+  "Focus on what matters today."
+];
+
+const quoteText = document.getElementById("quoteText");
+const progressBar = document.getElementById("progressBar");
+
+let quoteIndex=0, charIndex=0;
+
+function typeQuote(){
+  const q=quotes[quoteIndex];
+  quoteText.textContent=q.slice(0,charIndex++);
+  if(charIndex<=q.length) setTimeout(typeQuote,40);
+  else setTimeout(()=>{quoteIndex=(quoteIndex+1)%quotes.length;charIndex=0;typeQuote();},2000);
+}
+
+/* ===== DATE LOGIC ===== */
+const dateCarousel=document.getElementById("dateCarousel");
+const currentMonthYear=document.getElementById("currentMonthYear");
+const prevMonthBtn=document.getElementById("prevMonth");
+const nextMonthBtn=document.getElementById("nextMonth");
+const todayBtn=document.getElementById("todayBtn");
+
+// Get today's date (February 2026)
+const today = new Date();
+// If you want to force it to be February 2026 for testing:
+today.setFullYear(2026, 1, 8); // February 8, 2026 (month is 0-indexed, so 1 = February)
+
+let currentDate = localStorage.getItem("selectedDate")
+  ? new Date(localStorage.getItem("selectedDate"))
+  : today;
+
+// Check if the stored date is valid and not too old
+const storedDate = new Date(localStorage.getItem("selectedDate"));
+if (isNaN(storedDate.getTime())) {
+  // Invalid date, use today
+  currentDate = today;
+} else {
+  // Check if stored date is from a different month/year
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  const storedYear = storedDate.getFullYear();
+  const storedMonth = storedDate.getMonth();
+  
+  // If stored date is from a different month or year, use today
+  if (storedYear !== currentYear || storedMonth !== currentMonth) {
+    currentDate = today;
+  }
+}
+
+function updateMonthDisplay() {
+  const monthYear = currentDate.toLocaleDateString('en-US', { 
+    month: 'long', 
+    year: 'numeric' 
+  });
+  currentMonthYear.textContent = monthYear;
+}
+
+function renderDates(){
+  dateCarousel.innerHTML="";
+  const year=currentDate.getFullYear();
+  const month=currentDate.getMonth(); // Get current month (0-11)
+  
+  // Get first and last day of the current month
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0); // Last day of month
+  
+  // Loop through all days of the current month
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    // Create a new date object for each day
+    const date = new Date(year, month, day);
+    
+    const btn=document.createElement("button");
+    btn.innerHTML=`${date.toLocaleDateString("en-US",{month:"short"})}<br>${date.getDate()}<br>${date.toLocaleDateString("en-US",{weekday:"short"})}`;
+    
+    // Store the date as a data attribute
+    btn.dataset.date = date.toISOString();
+    
+    if(date.toDateString()===currentDate.toDateString()) {
+      btn.classList.add("active");
+    }
+    
+    dateCarousel.appendChild(btn);
+  }
+  
+  // Add click event listener using event delegation
+  dateCarousel.addEventListener('click', function(e) {
+    if (e.target.tagName === 'BUTTON' && e.target.dataset.date) {
+      // Remove active class from all buttons
+      document.querySelectorAll('.date-carousel button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Add active class to clicked button
+      e.target.classList.add('active');
+      
+      // Update current date from data attribute
+      currentDate = new Date(e.target.dataset.date);
+      localStorage.setItem("selectedDate", currentDate.toISOString());
+      
+      // Re-render tasks for the new date
+      renderTasks();
+      refreshMotivation();
+    }
+  });
+}
+
+dateCarousel.addEventListener("wheel",e=>{e.preventDefault();dateCarousel.scrollLeft+=e.deltaY});
+
+/* ===== MONTH NAVIGATION ===== */
+prevMonthBtn.onclick = () => {
+  currentDate.setMonth(currentDate.getMonth() - 1);
+  localStorage.setItem("selectedDate", currentDate.toISOString());
+  renderDates();
+  updateMonthDisplay();
+  renderTasks();
+  refreshMotivation();
+};
+
+nextMonthBtn.onclick = () => {
+  currentDate.setMonth(currentDate.getMonth() + 1);
+  localStorage.setItem("selectedDate", currentDate.toISOString());
+  renderDates();
+  updateMonthDisplay();
+  renderTasks();
+  refreshMotivation();
+};
+
+todayBtn.onclick = () => {
+  currentDate = new Date(today);
+  localStorage.setItem("selectedDate", currentDate.toISOString());
+  renderDates();
+  updateMonthDisplay();
+  renderTasks();
+  refreshMotivation();
+};
+
+/* ===== TASKS ===== */
+const tasksContainer=document.getElementById("tasksContainer");
+
+function renderTasks(){
+  tasksContainer.innerHTML="";
+  const key=currentDate.toISOString().split("T")[0];
+  const list=[...defaultHabits,...(specialTasks[key]||[])];
+  const done=JSON.parse(localStorage.getItem(key))||[];
+
+  list.forEach(task=>{
+    const row=document.createElement("div");
+    row.className="habit";
+    
+    // Get streak for this habit
+    const streak = getStreakCount(task);
+    const streakClass = getStreakBadgeClass(streak);
+    
+    row.innerHTML=`
+      <input type="checkbox">
+      <label>
+        <span class="habit-text">${task}</span>
+        <span class="streak-badge ${streakClass}">
+          ${streak > 0 ? '🔥' : '⏳'} ${streak}
+        </span>
+      </label>
+    `;
+    
+    const cb=row.querySelector("input");
+    if(done.includes(task)) cb.checked=true;
+
+    cb.onchange=()=>{
+      let d=JSON.parse(localStorage.getItem(key))||[];
+      cb.checked?d.push(task):d=d.filter(t=>t!==task);
+      localStorage.setItem(key,JSON.stringify(d));
+      refreshMotivation();
+      // Update streak display immediately
+      const streakBadge = row.querySelector('.streak-badge');
+      const newStreak = getStreakCount(task);
+      const newStreakClass = getStreakBadgeClass(newStreak);
+      streakBadge.innerHTML = `${newStreak > 0 ? '🔥' : '⏳'} ${newStreak}`;
+      streakBadge.className = `streak-badge ${newStreakClass}`;
+    };
+
+    row.querySelector("label").onclick=(e)=>{
+      // Don't trigger if clicking on streak badge
+      if (!e.target.classList.contains('streak-badge')) {
+        localStorage.setItem("selectedTask",JSON.stringify({date:key,taskName:task}));
+        window.open("stats.html","_blank");
+      }
+    };
+
+    tasksContainer.appendChild(row);
+  });
+}
+
+/* ===== PROGRESS ===== */
+function refreshMotivation(){
+  const key=currentDate.toISOString().split("T")[0];
+  const done=(JSON.parse(localStorage.getItem(key))||[]).length;
+  const total=defaultHabits.length+(specialTasks[key]?.length||0);
+  progressBar.style.width=total?Math.round(done/total*100)+"%":"0%";
+}
+
+/* ===== MENU NAVIGATION ===== */
+const menuItems = document.querySelectorAll('.menu-item');
+
+// Remove the old navigation code and replace with:
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const page = this.dataset.page;
+    
+    if (page === 'home') {
+      window.location.href = 'index.html';
+    } else if (page === 'stats') {
+      window.location.href = 'stats.html';
+    } else if (page === 'calendar') {
+      window.location.href = 'calendar.html';
+    } else if (page === 'focus') {
+      window.location.href = 'focus.html';
+    } else if (page === 'settings') {
+      window.location.href = 'settings.html';
+    } else if (page === 'ai') {
+      alert('AI Agent coming soon!');
+    }
+  });
+});
+
+/* ===== STATS FUNCTIONS ===== */
+function getHabitStats(habitName) {
+  const stats = {
+    totalDays: 0,
+    completedDays: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    weeklyAvg: 0
+  };
+  
+  // Calculate for last 30 days
+  const endDate = new Date(currentDate);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - 30);
+  
+  let currentStreak = 0;
+  let bestStreak = 0;
+  let weeklyCompletions = 0;
+  
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().split("T")[0];
+    const done = JSON.parse(localStorage.getItem(key)) || [];
+    
+    if (done.includes(habitName)) {
+      stats.completedDays++;
+      currentStreak++;
+      bestStreak = Math.max(bestStreak, currentStreak);
+      
+      // Last 7 days
+      if (d >= new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000)) {
+        weeklyCompletions++;
+      }
+    } else {
+      currentStreak = 0;
+    }
+  }
+  
+  stats.totalDays = 30;
+  stats.currentStreak = getStreakCount(habitName); // Use existing function
+  stats.bestStreak = bestStreak;
+  stats.weeklyAvg = Math.round((weeklyCompletions / 7) * 100);
+  
+  return stats;
+}
+
+/* ===== BUTTON HANDLERS ===== */
+document.getElementById("addTask").onclick=()=>{
+  const t=prompt("Enter task for today:");
+  if(!t) return;
+  const key=currentDate.toISOString().split("T")[0];
+  specialTasks[key]=specialTasks[key]||[];
+  specialTasks[key].push(t);
+  renderTasks();
+  refreshMotivation();
+};
+
+document.getElementById("aiPartner").onclick=()=>{
+  alert("AI Partner activated! How can I help you stay productive today?");
+  // This could open a chat interface
+};
+
+/* INIT */
+updateMonthDisplay();
+renderDates();
+renderTasks();
+refreshMotivation();
+typeQuote();
+// Apply settings when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize settings manager
+  if (typeof SettingsManager !== 'undefined') {
+    SettingsManager.init();
+    
+    // Apply saved theme immediately
+    const savedTheme = localStorage.getItem('dailyLoopTheme') || SettingsManager.get('theme');
+    if (savedTheme) {
+      document.body.className = '';
+      document.body.classList.add(`theme-${savedTheme}`);
+    }
+  }
+  
+  // Highlight current page in menu
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const pageMap = {
+    'index.html': 'home',
+    'stats.html': 'stats',
+    'calendar.html': 'calendar',
+    'focus.html': 'focus',
+    'settings.html': 'settings'
+  };
+  
+  const currentPageId = pageMap[currentPage] || 'home';
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.classList.remove('active');
+    if (item.dataset.page === currentPageId) {
+      item.classList.add('active');
+    }
+  });
+});
+</script>
+
+</body>
+</html>
