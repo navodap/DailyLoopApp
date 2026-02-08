@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DailyLoop · Calendar</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(135deg, #f7c6d8, #f3dbe5);
+  min-height: 100vh;
+  color: #3a1f2d;
+  display: flex;
+}
+
+/* ---------- SIDE MENU ---------- */
+.side-menu {
+  width: 80px;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.25);
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
+  gap: 35px;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.menu-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #3a1f2d;
+  font-size: 20px;
+  padding: 6px 0;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.menu-item.active {
+  background: rgba(255, 90, 158, 0.2);
+  border-color: #ff5a9e;
+  color: #ff5a9e;
+}
+
+.menu-item span {
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+  text-align: center;
+  width: 100%;
+  line-height: 1.2;
+}
+
+/* ---------- MAIN CONTENT ---------- */
+.main-content {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- HEADER ---------- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* ---------- MONTH CONTROLS ---------- */
+.month-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--glass-bg);
+  padding: 10px 15px;
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.month-controls button {
+  border: none;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--bg-color-light);
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
+  color: var(--primary-color);
+}
+.month-controls button:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* ---------- CALENDAR ---------- */
+.calendar {
+  flex: 1;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  background: var(--glass-bg);
+  border-radius: 20px;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+.day-name {
+  text-align: center;
+  font-weight: 600;
+  opacity: 0.6;
+  padding: 10px 0;
+  color: var(--text-color);
+}
+
+/* ---------- DATE CELL ---------- */
+.day {
+  position: relative;
+  height: 110px;
+  padding: 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--text-color);
+}
+
+.day:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.day.inactive {
+  opacity: 0.35;
+}
+
+/* ---------- DATE NUMBER ---------- */
+.day-number {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+/* ---------- HEATMAP COLORS ---------- */
+.heat-0 { background: rgba(255, 255, 255, 0.4); }
+.heat-1 { background: rgba(255, 180, 200, 0.45); }
+.heat-2 { background: rgba(255, 130, 170, 0.55); }
+.heat-3 { background: rgba(255, 90, 140, 0.7); }
+
+/* Apply theme colors to heatmap */
+body.theme-blue .heat-1 { background: rgba(180, 200, 255, 0.45); }
+body.theme-blue .heat-2 { background: rgba(130, 170, 255, 0.55); }
+body.theme-blue .heat-3 { background: rgba(90, 140, 255, 0.7); }
+
+body.theme-green .heat-1 { background: rgba(180, 255, 200, 0.45); }
+body.theme-green .heat-2 { background: rgba(130, 255, 170, 0.55); }
+body.theme-green .heat-3 { background: rgba(90, 255, 140, 0.7); }
+
+body.theme-dark .heat-1 { background: rgba(255, 90, 158, 0.3); }
+body.theme-dark .heat-2 { background: rgba(255, 90, 158, 0.5); }
+body.theme-dark .heat-3 { background: rgba(255, 90, 158, 0.7); }
+
+/* ---------- TOOLTIP ---------- */
+.tooltip {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ---------- TODAY ---------- */
+.today {
+  outline: 3px solid var(--primary-color);
+}
+
+/* ===== DYNAMIC THEME VARIABLES ===== */
+:root {
+  --primary-gradient: linear-gradient(135deg, #f7c6d8, #f3dbe5);
+  --primary-color: #ff5a9e;
+  --primary-color-rgb: 255, 90, 158;
+  --text-color: #3a1f2d;
+  --text-color-rgb: 58, 31, 45;
+  --bg-color: rgba(255, 255, 255, 0.45);
+  --bg-color-light: rgba(255, 255, 255, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.45);
+}
+
+body.theme-pink {
+  --primary-gradient: linear-gradient(135deg, #f7c6d8, #f3dbe5);
+  --primary-color: #ff5a9e;
+  --primary-color-rgb: 255, 90, 158;
+  --text-color: #3a1f2d;
+  --text-color-rgb: 58, 31, 45;
+}
+
+body.theme-blue {
+  --primary-gradient: linear-gradient(135deg, #c6d8f7, #dbe5f3);
+  --primary-color: #4a90e2;
+  --primary-color-rgb: 74, 144, 226;
+  --text-color: #1f2d3a;
+  --text-color-rgb: 31, 45, 58;
+}
+
+body.theme-green {
+  --primary-gradient: linear-gradient(135deg, #c6f7d8, #dbf3e5);
+  --primary-color: #28a745;
+  --primary-color-rgb: 40, 167, 69;
+  --text-color: #1f3a2d;
+  --text-color-rgb: 31, 58, 45;
+}
+
+body.theme-dark {
+  --primary-gradient: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+  --primary-color: #ff5a9e;
+  --primary-color-rgb: 255, 90, 158;
+  --text-color: #ffffff;
+  --text-color-rgb: 255, 255, 255;
+  --bg-color: rgba(255, 255, 255, 0.1);
+  --bg-color-light: rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(30, 30, 30, 0.6);
+}
+
+/* Apply theme */
+body {
+  background: var(--primary-gradient);
+  color: var(--text-color);
+}
+
+.menu-item {
+  background: var(--bg-color-light);
+  color: var(--text-color);
+}
+
+.menu-item.active {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.month-controls button {
+  background: var(--bg-color-light);
+  color: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .side-menu {
+    width: 60px;
+    padding-top: 20px;
+    gap: 25px;
+  }
+  
+  .menu-item {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .menu-item span {
+    font-size: 9px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
+  
+  .calendar {
+    gap: 8px;
+    padding: 15px;
+  }
+  
+  .day {
+    height: 80px;
+    padding: 8px;
+  }
+  
+  .day-number {
+    font-size: 16px;
+  }
+  
+  .tooltip {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .day {
+    height: 70px;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+  .month-controls {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+}
+</style>
+<script src="settings-manager.js"></script>
+</head>
+
+<body>
+  <!-- SIDE MENU -->
+  <div class="side-menu">
+    <div class="menu-item" data-page="home">
+      🏠
+      <span>Home</span>
+    </div>
+    <div class="menu-item" data-page="stats">
+      📊
+      <span>Stats</span>
+    </div>
+    <div class="menu-item active" data-page="calendar">
+      📅
+      <span>Calendar</span>
+    </div>
+    <div class="menu-item" data-page="focus">
+      🎯
+      <span>Focus</span>
+    </div>
+    <div class="menu-item" data-page="ai">
+      🤖
+      <span>AI Agent</span>
+    </div>
+    <div class="menu-item" data-page="settings">
+      ⚙️
+      <span>Settings</span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- HEADER -->
+    <div class="header">
+      <h1 id="monthTitle"></h1>
+      <div class="month-controls">
+        <button id="prev">◀ Previous</button>
+        <button id="next">Next ▶</button>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="calendar" id="calendar">
+      <!-- Day names will be added by JavaScript -->
+    </div>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Apply theme
+  const savedTheme = localStorage.getItem('dailyLoopTheme') || 'pink';
+  document.body.className = '';
+  document.body.classList.add(`theme-${savedTheme}`);
+  
+  // Setup navigation
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const page = this.dataset.page;
+      
+      if (page === 'home') window.location.href = 'index.html';
+      if (page === 'stats') window.location.href = 'stats.html';
+      if (page === 'calendar') window.location.href = 'calendar.html';
+      if (page === 'focus') window.location.href = 'focus.html';
+      if (page === 'settings') window.location.href = 'settings.html';
+      if (page === 'ai') alert('AI Agent coming soon!');
+    });
+  });
+  
+  // Highlight current page
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.classList.remove('active');
+    if (item.dataset.page === 'calendar') {
+      item.classList.add('active');
+    }
+  });
+  
+  // Calendar functionality
+  const calendar = document.getElementById("calendar");
+  const title = document.getElementById("monthTitle");
+  const prevBtn = document.getElementById("prev");
+  const nextBtn = document.getElementById("next");
+
+  let current = new Date();
+  current.setDate(1);
+
+  // Day names
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  function initializeCalendar() {
+    // Add day names
+    dayNames.forEach(day => {
+      const dayEl = document.createElement("div");
+      dayEl.className = "day-name";
+      dayEl.textContent = day;
+      calendar.appendChild(dayEl);
+    });
+  }
+
+  function renderCalendar() {
+    // Clear existing days (keep day names)
+    const existingDays = calendar.querySelectorAll('.day, .day.inactive');
+    existingDays.forEach(day => day.remove());
+
+    const year = current.getFullYear();
+    const month = current.getMonth();
+
+    // Update title
+    title.textContent = current.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric"
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    // Get tasks from localStorage
+    const tasks = JSON.parse(localStorage.getItem('defaultHabits') || '["Drink 3L Water","Study","Exercise","Sleep Early"]');
+
+    // Empty slots for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement("div");
+      empty.className = "day inactive";
+      calendar.appendChild(empty);
+    }
+
+    // Days of the month
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const key = date.toISOString().split("T")[0];
+      const done = JSON.parse(localStorage.getItem(key)) || [];
+      const ratio = tasks.length > 0 ? done.length / tasks.length : 0;
+
+      // Determine heat level
+      let heat = "heat-0";
+      if (ratio > 0.25) heat = "heat-1";
+      if (ratio > 0.5) heat = "heat-2";
+      if (ratio > 0.8) heat = "heat-3";
+
+      const div = document.createElement("div");
+      div.className = `day ${heat}`;
+      
+      // Check if today
+      if (date.toDateString() === today.toDateString()) {
+        div.classList.add("today");
+      }
+
+      div.innerHTML = `
+        <div class="day-number">${d}</div>
+        <div class="tooltip">${done.length}/${tasks.length} completed</div>
+      `;
+
+      div.onclick = () => {
+        localStorage.setItem("selectedDate", key);
+        window.location.href = "index.html";
+      };
+
+      calendar.appendChild(div);
+    }
+  }
+
+  // Event listeners for month navigation
+  prevBtn.onclick = () => {
+    current.setMonth(current.getMonth() - 1);
+    renderCalendar();
+  };
+
+  nextBtn.onclick = () => {
+    current.setMonth(current.getMonth() + 1);
+    renderCalendar();
+  };
+
+  // Initialize
+  initializeCalendar();
+  renderCalendar();
+});
+</script>
+</body>
+</html>
