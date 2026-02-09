@@ -141,6 +141,7 @@ body {
   margin-bottom:10px;
   overflow-x:auto;
   scrollbar-width:none;
+  flex-shrink: 0; /* Prevent date carousel from shrinking */
 }
 .date-carousel::-webkit-scrollbar { display:none; }
 
@@ -177,6 +178,7 @@ body {
   flex:1;
   padding:20px;
   gap:20px;
+  min-height: 0; /* Crucial for flex children to scroll */
 }
 
 /* ---------- MOTIVATION COLUMN ---------- */
@@ -218,6 +220,34 @@ body {
   display:flex;
   flex-direction:column;
   gap:12px;
+  overflow-y: auto; /* Make tasks scrollable */
+  max-height: calc(100vh - 250px); /* Limit height */
+  padding-right: 5px; /* Space for scrollbar */
+}
+
+/* Style the scrollbar for tasks container */
+.tasks-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tasks-container::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+}
+
+.tasks-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 90, 158, 0.4);
+  border-radius: 4px;
+}
+
+.tasks-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 90, 158, 0.6);
+}
+
+/* For Firefox */
+.tasks-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 90, 158, 0.4) rgba(255,255,255,0.2);
 }
 
 .habit {
@@ -231,6 +261,7 @@ body {
   border:1px solid rgba(255,255,255,0.6);
   cursor:pointer;
   transition: 0.25s;
+  flex-shrink: 0; /* Prevent habits from shrinking */
 }
 
 .habit:hover {
@@ -515,6 +546,16 @@ body.theme-dark {
 <!-- Add this in head section of ALL HTML files -->
 <script src="settings-manager.js"></script>
 </head>
+<!-- Add account button at bottom -->
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+  <button id="account-button" 
+          style="background: #3b82f6; color: white; border: none; 
+                 padding: 12px 20px; border-radius: 8px; font-weight: bold;
+                 cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+    👤 Create Account 
+  </button>
+</div>
+
 
 <body>
 
@@ -616,7 +657,7 @@ function getDefaultHabits() {
 
 /* ===== DATA ===== */
 let defaultHabits = getDefaultHabits();
-let specialTasks = {};
+let specialTasks = JSON.parse(localStorage.getItem('specialTasks')) || {};
 
 /* ===== HABIT EDITOR ===== */
 const editHabitsBtn = document.getElementById('editHabits');
@@ -1014,12 +1055,29 @@ function getHabitStats(habitName) {
 }
 
 /* ===== BUTTON HANDLERS ===== */
-document.getElementById("addTask").onclick=()=>{
-  const t=prompt("Enter task for today:");
-  if(!t) return;
-  const key=currentDate.toISOString().split("T")[0];
-  specialTasks[key]=specialTasks[key]||[];
-  specialTasks[key].push(t);
+document.getElementById("addTask").onclick = () => {
+  const t = prompt("Enter task for today:");
+  if (!t) return;
+  const key = currentDate.toISOString().split("T")[0];
+  
+  // Load existing special tasks from localStorage
+  const savedSpecialTasks = JSON.parse(localStorage.getItem('specialTasks')) || {};
+  
+  // Ensure array exists for this date
+  if (!savedSpecialTasks[key]) {
+    savedSpecialTasks[key] = [];
+  }
+  
+  // Add new task
+  savedSpecialTasks[key].push(t);
+  
+  // Save back to localStorage
+  localStorage.setItem('specialTasks', JSON.stringify(savedSpecialTasks));
+  
+  // Update the in-memory object
+  specialTasks = savedSpecialTasks;
+  
+  // Refresh display
   renderTasks();
   refreshMotivation();
 };
